@@ -58,7 +58,8 @@ class PricePrivacyTests(unittest.TestCase):
 
     def test_egress_denies_arbitrary_urls_and_redirects(self):
         with self.assertRaises(ValueError):fetch_document("https://example.com/private")
-        with self.assertRaises(ValueError):FixedRedirects().redirect_request(None, None, 302, "", {}, "https://example.com")
+        redirects = FixedRedirects()
+        with self.assertRaises(ValueError):redirects.redirect_request(None, None, 302, "", {}, "https://example.com")
         response = MagicMock();response.__enter__.return_value.read.return_value = b"public"
         opener = MagicMock();opener.open.return_value = response
         with patch("session_autopsy.adapters.network.build_opener", return_value=opener):

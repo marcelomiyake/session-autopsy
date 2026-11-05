@@ -1,6 +1,7 @@
 """Private local state, explicitly separate from repository artifacts."""
 from pathlib import Path
 import os
+import re
 import tempfile
 
 
@@ -31,3 +32,17 @@ class PrivateEvidenceStore:
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
             stream.write(content)
         return Path(name)
+
+
+def export_report(filename, content):
+    """CLI output names cannot escape the workspace's private reports folder."""
+    name = str(filename)
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", name):
+        raise ValueError("Output must be a simple filename inside ./reports")
+    if Path(name).suffix not in (".json", ".md", ".txt"):
+        raise ValueError("Output must use .json, .md, or .txt; source logs are read-only")
+    root = Path.cwd() / "reports"
+    if root.is_symlink():
+        raise ValueError("Reports directory must not be a symlink")
+    root.mkdir(mode=0o700, exist_ok=True)
+    return private_write(root / name, content)

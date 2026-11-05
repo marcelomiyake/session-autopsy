@@ -36,13 +36,7 @@ def _screen(screen, rows, curses):
     while True:
         matching = [r for r in rows if query.lower() in " ".join(str(v) for v in r.values()).lower()]
         selected = min(selected, max(0, len(matching) - 1))
-        height, width = screen.getmaxyx()
-        screen.erase()
-        screen.addnstr(0, 0, "Search: " + query + " (arrows, Enter, Esc)", max(0, width - 1))
-        start = max(0, selected - max(1, height - 3) + 1)
-        for number, row in enumerate(matching[start:start + max(0, height - 2)], start):
-            text = f"{row['started']} {row['harness']} {row['cwd']} {row['initial_prompt']}".replace("\n", " ")
-            screen.addnstr(number - start + 1, 0, text, max(0, width - 1), curses.A_REVERSE if number == selected else 0)
+        _draw(screen, matching, selected, query, curses)
         key = screen.get_wch()
         if key in ("\n", "\r") and matching:
             return matching[selected]["path"]
@@ -56,3 +50,13 @@ def _screen(screen, rows, curses):
             query = query[:-1]
         elif isinstance(key, str) and key.isprintable():
             query += key
+
+
+def _draw(screen, matching, selected, query, curses):
+    height, width = screen.getmaxyx()
+    screen.erase()
+    screen.addnstr(0, 0, "Search: " + query + " (arrows, Enter, Esc)", max(0, width - 1))
+    start = max(0, selected - max(1, height - 3) + 1)
+    for number, row in enumerate(matching[start:start + max(0, height - 2)], start):
+        text = f"{row['started']} {row['harness']} {row['cwd']} {row['initial_prompt']}".replace("\n", " ")
+        screen.addnstr(number - start + 1, 0, text, max(0, width - 1), curses.A_REVERSE if number == selected else 0)

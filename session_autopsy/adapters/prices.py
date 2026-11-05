@@ -57,18 +57,25 @@ def parse_claude(body):
             continue
         if not table or not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 6:
-            continue
-        model = claude_model(cells[0]) or last_model
-        values = [dollars(c) for c in cells[1:6]]
-        if model and all(v is not None for v in values):
-            long = "over 100" in line or ">100" in line or "> 100" in line
-            entries.append(rate(model, "anthropic", "standard", "long" if long else "short",
-                dict(zip(("input", "write_5m", "write_1h", "read", "output"), values)),
-                100000 if model == "claude-haiku-5-5" else None))
-            last_model = model
+        parsed = _claude_row(line, last_model)
+        if parsed:
+            entries.append(parsed)
+            last_model = parsed["model"]
     return entries
+
+
+def _claude_row(line, last_model):
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    if len(cells) < 6:
+        return None
+    model = claude_model(cells[0]) or last_model
+    values = [dollars(c) for c in cells[1:6]]
+    if not model or any(v is None for v in values):
+        return None
+    long = "over 100" in line or ">100" in line or "> 100" in line
+    return rate(model, "anthropic", "standard", "long" if long else "short",
+        dict(zip(("input", "write_5m", "write_1h", "read", "output"), values)),
+        100000 if model == "claude-haiku-5-5" else None)
 
 
 def validate_snapshot(data):

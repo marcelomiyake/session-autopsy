@@ -100,7 +100,8 @@ class DeliveryTests(unittest.TestCase):
         screen.get_wch.side_effect = [2, 1, "w", 3, "\n"]
         self.assertEqual(_screen(screen, session_rows([self.s]), curses), self.s.path)
         screen.get_wch.side_effect = ["\x1b"]
-        with self.assertRaises(ValueError):_screen(screen, session_rows([self.s]), curses)
+        rows = session_rows([self.s])
+        with self.assertRaises(ValueError):_screen(screen, rows, curses)
         with patch.dict("sys.modules", {"curses": None}):
             self.assertIsNone(_interactive([]))
         with patch("sys.stdin.isatty", return_value=True), patch("sys.stdout.isatty", return_value=True), patch("session_autopsy.adapters.picker._interactive", return_value="chosen"):
@@ -130,9 +131,9 @@ class DeliveryTests(unittest.TestCase):
         with patch("session_autopsy.cli.run", return_value={"ok": True}), patch("sys.stdout", new_callable=io.StringIO) as stream:
             self.assertEqual(cli.main(["list"]), 0)
             self.assertIn("true", stream.getvalue())
-        output = self.root / "report.json"
-        with patch("session_autopsy.cli.run", return_value=[]):
-            self.assertEqual(cli.main(["list", "--output", str(output)]), 0)
+        output = self.root / "reports/report.json"
+        with patch("session_autopsy.cli.run", return_value=[]), patch("session_autopsy.adapters.local.Path.cwd", return_value=self.root):
+            self.assertEqual(cli.main(["list", "--output", "report.json"]), 0)
         self.assertTrue(output.exists())
         with patch("session_autopsy.cli.run", side_effect=ValueError("invalid")), patch("sys.stderr", new_callable=io.StringIO):
             self.assertEqual(cli.main(["list"]), 2)

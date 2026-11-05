@@ -16,7 +16,7 @@ def snapshot_rows(path: Path, warnings: list[str]):
                 row = json.loads(line)
                 if isinstance(row, dict):
                     yield number, row
-            except (ValueError, UnicodeError):
+            except ValueError:
                 warnings.append(f"{path}:{number}: malformed or incomplete record")
 
 

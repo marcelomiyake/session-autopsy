@@ -84,7 +84,10 @@ Filter with `--harness claude|codex`, `--since YYYY-MM-DD`, `--until YYYY-MM-DD`
 `--cwd`, `--query`, `--limit`, and `--timezone America/Sao_Paulo`. Override session
 locations using `--claude-root` and `--codex-root`. Default locations are
 `~/.claude/projects` and `$CODEX_HOME/sessions` (normally `~/.codex/sessions`).
-Use `--format json|markdown|text` and `--output /private/path/report.json` to export.
+Use `--format json|markdown|text` and `--output report.json` to export into
+`./reports`. Output accepts a simple filename with `.json`, `.md`, or `.txt`;
+directory traversal and writing outside that folder are rejected. Move an export
+explicitly afterward if needed. Reports are ignored by Git and created mode 0600.
 
 ## Accounting and analysis limits
 

@@ -7,7 +7,7 @@ import sys
 
 from session_autopsy.adapters.claude import ClaudeSource
 from session_autopsy.adapters.codex import CodexSource
-from session_autopsy.adapters.local import PrivateEvidenceStore, private_write
+from session_autopsy.adapters.local import PrivateEvidenceStore, export_report
 from session_autopsy.adapters.picker import choose
 from session_autopsy.adapters.presentation import render, session_rows
 from session_autopsy.adapters.prices import OfficialPrices
@@ -74,13 +74,7 @@ def run(args):
         return rows
     if args.command == "pick":
         return {"selected": choose(rows)}
-    selector = args.selector
-    if selector == "current":
-        selector = os.environ.get("CLAUDE_SESSION_ID") or os.environ.get("CODEX_THREAD_ID")
-        if not selector:
-            raise ValueError("Current session ID unavailable; select an explicit ID")
-    if not selector:
-        selector = choose(rows)
+    selector = resolve_selector(args.selector, rows)
     candidates = [s for s in sessions if not args.harness or s.harness == args.harness]
     selected = service.select(candidates, selector)
     report, family = service.report(sessions, selected, prices.load(args.offline))
@@ -95,15 +89,24 @@ def run(args):
     return report
 
 
+def resolve_selector(selector, rows):
+    if selector == "current":
+        selector = os.environ.get("CLAUDE_SESSION_ID") or os.environ.get("CODEX_THREAD_ID")
+        if not selector:
+            raise ValueError("Current session ID unavailable; select an explicit ID")
+    if not selector:
+        selector = choose(rows)
+    return selector
+
+
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
         value = run(args)
         output = render(value, args.format)
         if args.output:
-            if args.output.suffix == ".jsonl":
-                raise ValueError("Choose a JSON, Markdown, or text export; session JSONL files are read-only")
-            private_write(args.output, output + "\n")
+            destination = export_report(args.output, output + "\n")
+            print(f"Saved {destination}")
         else:
             print(output)
         return 0
