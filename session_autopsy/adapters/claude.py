@@ -58,7 +58,8 @@ class ClaudeSource:
                 "after": meta.get("postTokens"), "evidence": {"path": session.path, "line": line}})
         elif kind == "cost-state":
             session.reported[:] = [{"source": "cost-state", "timestamp": row.get("timestamp"),
-                "recorded_cost_usd": row.get("totalCostUSD"), "models": row.get("modelUsage", {})}]
+                "model_provider": "anthropic", "recorded_cost_usd": row.get("totalCostUSD"),
+                "models": {model: summary_tokens(usage) for model, usage in row.get("modelUsage", {}).items()}}]
 
     def _assistant(self, session, row, line, latest):
         message = row.get("message") or {}
@@ -77,3 +78,13 @@ class ClaudeSource:
                 usage.get("inference_geo", "global"))
         except (TypeError, ValueError) as exc:
             session.warnings.append(f"{session.path}:{line}: invalid usage: {exc}")
+
+
+def summary_tokens(usage):
+    counts = {target: usage.get(source) for target, source in {
+        "cache_read": "cacheReadInputTokens", "cache_write": "cacheCreationInputTokens",
+        "output": "outputTokens", "reasoning": "thinkingTokens"}.items()}
+    fresh = usage.get("inputTokens")
+    input_parts = (fresh, counts["cache_read"], counts["cache_write"])
+    counts["input"] = sum(input_parts) if all(type(v) is int for v in input_parts) else None
+    return counts

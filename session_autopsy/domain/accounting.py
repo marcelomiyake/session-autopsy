@@ -83,6 +83,8 @@ def build_report(sessions, catalog):
         groups.setdefault(key, []).append(observation)
     models = [{"provider": k[0], "model": k[1], "effort": k[2], **summarize(v, catalog)} for k, v in groups.items()]
     agents = [{"id": s.agent_id, "parent_id": s.parent_id, "path": s.path,
+               "compactions": sum(e.get("agent_id") == s.agent_id for e in compactions.values()),
+               "peak_request_input": max((o.tokens.input or 0 for o in observations if o.agent_id == s.agent_id), default=None),
                **summarize([o for o in observations if o.agent_id == s.agent_id], catalog)} for s in sessions]
     requests = [{**asdict(o), "cost_usd": request_cost(o, catalog)} for o in observations]
     requests.sort(key=lambda r: Decimal((r["cost_usd"] or {}).get("high", "0")), reverse=True)
@@ -92,7 +94,23 @@ def build_report(sessions, catalog):
         "totals": summarize(observations, catalog), "models": models, "agents": agents,
         "compactions": list(compactions.values()), "most_expensive_requests": requests[:20],
         "reported_summaries": [r for s in sessions for r in s.reported],
+        "reconciliation": reconcile(sessions, observations),
         "warnings": [w for s in sessions for w in s.warnings],
         "pricing": {k: catalog.get(k) for k in ("retrieved_at", "sources")},
         "cost_basis": "Estimated at current API rates; recorded summaries are reconciliation evidence, never additive",
         "coverage": "Observed requests only; summaries may contain additional unattributed/background usage"}
+
+
+def reconcile(sessions, observations):
+    differences = []
+    for session in sessions:
+        for summary in session.reported:
+            for model, reported in summary.get("models", {}).items():
+                owned = [o for o in observations if o.model == model and o.model_provider == summary.get("model_provider")]
+                measured = sum_tokens(owned)
+                delta = {k: v - (measured.get(k) or 0) for k, v in reported.items() if type(v) is int}
+                differences.append({"provider": summary.get("model_provider"), "model": model,
+                    "summary_only_model": not owned, "reported_tokens": reported,
+                    "observed_tokens": measured, "difference": delta,
+                    "note": "Counter scope/timing may differ; differences are not additive usage or estimated charges"})
+    return differences

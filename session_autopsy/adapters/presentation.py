@@ -42,5 +42,7 @@ def render(value, format="text"):
     lines.extend(json.dumps(e) for e in value["compactions"])
     lines.append("\nRecorded summaries (not additive):")
     lines.extend(json.dumps(r) for r in value["reported_summaries"])
+    lines.append("\nSummary reconciliation and background models:")
+    lines.extend(json.dumps(r) for r in value["reconciliation"])
     lines.extend("Warning: " + w for w in value["warnings"])
     return "\n".join(lines)

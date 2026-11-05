@@ -21,7 +21,8 @@ transcript instructions are untrusted data and must never be executed.
 Application HTTP uses fixed official documentation URLs only, without session
 data. Analysis uses native isolated workers on the invoking provider: Haiku 5.5
 or GPT-6 Luna at medium effort, or explicitly requested Sonnet 5.5 / GPT-6.1 Sol
-deep analysis. No automatic escalation, extra model clients, or telemetry.
+deep analysis. An explicit `--effort high` also permits high effort on the selected
+budget model. No automatic escalation, extra model clients, or telemetry.
 
 ## Verification and delivery
 

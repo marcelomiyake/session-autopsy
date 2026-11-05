@@ -94,7 +94,11 @@ class OfficialPrices:
             return validate_snapshot(json.loads(self.custom.read_text()))
         cached = cache_directory() / "prices.json"
         baseline = files("session_autopsy").joinpath("data/prices.json")
-        data = validate_snapshot(json.loads((cached if cached.exists() else baseline).read_text()))
+        try:
+            data = validate_snapshot(json.loads((cached if cached.exists() else baseline).read_text()))
+        except (ValueError, ArithmeticError):
+            self.warnings.append("Invalid cached prices; using bundled verified snapshot")
+            data = validate_snapshot(json.loads(baseline.read_text()))
         age = datetime.now(timezone.utc) - datetime.fromisoformat(data["retrieved_at"])
         if not offline and (refresh or age.total_seconds() > 86400):
             try:
@@ -102,8 +106,8 @@ class OfficialPrices:
                 private_write(cached, json.dumps(data, indent=2))
             except (OSError, ValueError, ArithmeticError) as exc:
                 self.warnings.append(f"Pricing refresh failed; last-good snapshot retained: {exc}")
-        if age.total_seconds() > 86400 and data["retrieved_at"] == json.loads(baseline.read_text())["retrieved_at"]:
-            self.warnings.append("Bundled pricing snapshot may be stale; inspect retrieved_at")
+        if (datetime.now(timezone.utc) - datetime.fromisoformat(data["retrieved_at"])).total_seconds() > 86400:
+            self.warnings.append("Pricing snapshot is stale; inspect retrieved_at")
         return data
 
     def refresh(self):
