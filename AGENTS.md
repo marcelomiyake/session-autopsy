@@ -28,7 +28,7 @@ deep analysis. No automatic escalation, extra model clients, or telemetry.
 Use `uv sync --locked`, `uv run coverage run -m unittest discover`,
 `uv run coverage report`, and `uv run coverage xml`. Run the skill validator when
 changing skill metadata. Exercise affected CLI behavior. Preserve 80% overall/new
-coverage, zero total/new Sonar issues, <=3% duplication, and reviewed hotspots.
+coverage, zero reported main/PR Sonar issues, <=3% duplication, and reviewed hotspots.
 Fix findings instead of weakening profiles or accepting issues to pass a gate.
 
 Use small feature branches, Conventional Commits, and matching PR titles. Push,

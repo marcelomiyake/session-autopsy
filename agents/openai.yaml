@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Autopsy"
+  short_description: "Account for session tokens, costs, agents, and context"
+  default_prompt: "Use $session-autopsy to select a session and report tokens, costs, and compactions."
