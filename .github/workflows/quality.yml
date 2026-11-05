@@ -1,0 +1,128 @@
+name: Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Tests and architecture contracts
+        run: |
+          uv run coverage run -m unittest discover
+          uv run coverage report
+  conventional-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate new commit headers and PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,re,subprocess
+          pattern=re.compile(r'^[a-z]+(?:\([^\r\n()]+\))?!?: \S.*$')
+          titles=[]
+          if os.environ['PR_TITLE']:
+              titles.append(os.environ['PR_TITLE'])
+              titles.extend(subprocess.check_output(['git','log','--format=%s',os.environ['BASE_SHA']+'..'+os.environ['HEAD_SHA']],text=True).splitlines())
+          else:
+              titles.append(subprocess.check_output(['git','log','-1','--format=%s'],text=True).strip())
+          invalid=[title for title in titles if not pattern.fullmatch(title)]
+          if invalid:raise SystemExit('Invalid Conventional Commit headers: '+repr(invalid))
+          PY
+  sonar-zero-total:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: |
+          uv sync --locked
+          uv run coverage run -m unittest discover
+          uv run coverage xml
+      - name: Select supported free-plan analysis
+        id: candidate
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "args=-Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=master" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=-Dsonar.branch.name=master" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Scan and wait for built-in gate
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            ${{ steps.candidate.outputs.args }}
+            -Dsonar.scm.revision=${{ github.sha }}
+            -Dsonar.qualitygate.wait=true
+      - name: Enforce zero reported issues and supported quality measures
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PYCODE'
+          import json,os,urllib.request,urllib.parse
+          from pathlib import Path
+          host='https://sonarcloud.io'
+          def get(path,params):
+              request=urllib.request.Request(host+path+'?'+urllib.parse.urlencode(params),headers={'Authorization':'Bearer '+os.environ['SONAR_TOKEN']})
+              with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
+          project='marcelomiyake_session-autopsy'
+          metrics=get('/api/measures/component',{'component':project,'branch':'master','metricKeys':'ncloc,coverage,duplicated_lines_density,security_hotspots_reviewed'})['component']['measures']
+          empty_main=not any(m['metric']=='ncloc' and float(m['value'])>0 for m in metrics)
+          task=dict(line.split('=',1) for line in Path('.scannerwork/report-task.txt').read_text().splitlines() if '=' in line)
+          completed=get('/api/ce/task',{'id':task['ceTaskId']})['task']
+          if completed['status']!='SUCCESS' or completed.get('componentKey')!=project:raise SystemExit('Candidate analysis did not complete')
+          exact=get('/api/qualitygates/project_status',{'analysisId':completed['analysisId']})['projectStatus']
+          if exact['status']!='OK':raise SystemExit('Exact candidate gate failed')
+          contexts=[{'branch':'master'}]
+          if os.environ['PR_NUMBER']:contexts.append({'pullRequest':os.environ['PR_NUMBER']})
+          for context in contexts:
+              gate=get('/api/qualitygates/project_status',{'projectKey':project,**context})['projectStatus']
+              if gate['status']!='OK' and not (context=={'branch':'master'} and empty_main and gate['status']=='NONE'):raise SystemExit('Quality gate missing or failed for '+repr(context))
+              issues=get('/api/issues/search',{'componentKeys':project,**context,'issueStatuses':'OPEN,CONFIRMED,ACCEPTED','ps':1})
+              if issues['total']!=0:raise SystemExit('Outstanding or accepted issues remain: '+repr(context))
+          bounds={'coverage':('min',80),'duplicated_lines_density':('max',3),'security_hotspots_reviewed':('min',100)}
+          for measure in metrics:
+              if measure['metric'] not in bounds:continue
+              direction,limit=bounds[measure['metric']]
+              value=float(measure['value'])
+              if (direction=='min' and value<limit) or (direction=='max' and value>limit):raise SystemExit('Overall metric failed: '+measure['metric'])
+          print('Verified zero reported issues on main and PR; free-plan PR analysis covers new code only.')
+          PYCODE
