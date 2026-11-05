@@ -6,7 +6,7 @@ import unittest
 
 class ArchitectureTests(unittest.TestCase):
     def test_inward_dependencies(self):
-        root = Path(__file__).resolve().parents[1] / "session_autopsy"
+        root = Path(__file__).resolve().parents[1] / "plugins/session-autopsy/session_autopsy"
         for layer, forbidden in (("domain", ("application", "adapters", "cli")),
                                  ("application", ("adapters", "cli"))):
             for path in (root / layer).rglob("*.py"):
