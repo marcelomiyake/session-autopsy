@@ -103,7 +103,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         value = run(args)
-        output = render(value, args.format)
+        output = render(value, args.format, args.timezone)
         if args.output:
             destination = export_report(args.output, output + "\n")
             print(f"Saved {destination}")
