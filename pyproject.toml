@@ -11,8 +11,14 @@ requires-python = ">=3.11"
 license = "MIT"
 dependencies = []
 
+[project.scripts]
+session-autopsy = "session_autopsy.cli:main"
+
 [dependency-groups]
-dev = ["coverage>=7.6,<8"]
+dev = [
+    "coverage>=7.6,<8",
+    "pyyaml>=6.0.3",
+]
 
 [tool.setuptools.packages.find]
 include = ["session_autopsy*"]

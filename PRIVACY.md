@@ -19,8 +19,9 @@ your IP address. Redirects outside the fixed allowlist are rejected. Offline mod
 uses local snapshots. Cached prices show their verification date.
 
 Private runtime files live in the user's cache directory with restrictive
-permissions. They remain until the user removes them. Explicit exports live at
-the selected path. No telemetry, automatic report uploads, remote storage, or
+permissions. They remain until the user removes them. Explicit exports live in
+the workspace's `reports` folder. Output filenames cannot escape that folder.
+No telemetry, automatic report uploads, remote storage, or
 third-party model routing is included.
 
 Development is separate: GitHub stores project code and branding assets;
