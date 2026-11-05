@@ -30,6 +30,8 @@
     "termsOfServiceURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/LICENSE",
     "defaultPrompt": [
       "Use $session-autopsy to select a session and report tokens, costs, and compactions."
-    ]
+    ],
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.png"
   }
 }

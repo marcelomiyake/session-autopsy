@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Session Autopsy: a lens inspecting a token usage trace with agent markers. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a1f3d"/>
+      <stop offset="1" stop-color="#0b1020"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8b6cf6" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#5b3fd0" stop-opacity="0.25"/>
+    </linearGradient>
+    <clipPath id="lens">
+      <circle cx="448" cy="448" r="226"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#tile)"/>
+  <circle cx="448" cy="448" r="226" fill="#12163a"/>
+  <g clip-path="url(#lens)">
+    <g fill="#7c5cff" opacity="0.9">
+      <rect x="262" y="600" width="26" height="40" rx="6"/>
+      <rect x="306" y="584" width="26" height="56" rx="6"/>
+      <rect x="350" y="592" width="26" height="48" rx="6"/>
+      <rect x="394" y="560" width="26" height="80" rx="6"/>
+      <rect x="438" y="576" width="26" height="64" rx="6"/>
+      <rect x="482" y="536" width="26" height="104" rx="6"/>
+      <rect x="526" y="556" width="26" height="84" rx="6"/>
+      <rect x="570" y="588" width="26" height="52" rx="6"/>
+      <rect x="614" y="600" width="26" height="40" rx="6"/>
+    </g>
+    <path d="M200 520 L268 498 L320 452 L372 488 L430 382 L478 430 L540 296 L596 414 L650 448 L700 440 L700 700 L200 700 Z" fill="url(#area)"/>
+    <path d="M200 520 L268 498 L320 452 L372 488 L430 382 L478 430 L540 296 L596 414 L650 448 L700 440" fill="none" stroke="#c4b5fd" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+  <g stroke="#12163a" stroke-width="12">
+    <circle cx="320" cy="452" r="30" fill="#5aa9f8"/>
+    <circle cx="430" cy="382" r="30" fill="#5dd39e"/>
+    <circle cx="540" cy="296" r="30" fill="#f7c35f"/>
+  </g>
+  <circle cx="448" cy="448" r="254" fill="none" stroke="#b4a7ff" stroke-width="56"/>
+  <path d="M648 648 L800 800" stroke="#8b6cf6" stroke-width="96" stroke-linecap="round"/>
+</svg>
