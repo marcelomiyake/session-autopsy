@@ -44,7 +44,6 @@ are isolated in the uv environment. See [AGENTS.md](AGENTS.md),
 ## Quality and contributions
 
 New commits and PR titles follow [Conventional Commits 1.0](https://www.conventionalcommits.org/en/v1.0.0/).
-Every merge requires tests, architecture checks, commit validation, and a complete
-candidate-tree SonarCloud analysis with zero total outstanding issues. Coverage is
+Every merge requires tests, architecture checks, commit validation, and a SonarCloud analysis with zero reported issues on current main and zero PR-scoped issues. Coverage is
 at least 80%; duplication is at most 3%; applicable hotspots are fully reviewed.
-Native PR gates alone do not establish zero issues across the whole project.
+Free-plan PR analysis covers new code only: it cannot prove the complete candidate tree is clean before merge. All of main is scanned after each merge.

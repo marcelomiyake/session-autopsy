@@ -70,47 +70,51 @@ jobs:
           uv sync --locked
           uv run coverage run -m unittest discover
           uv run coverage xml
-      - name: Identify full candidate tree
+      - name: Select supported free-plan analysis
         id: candidate
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
         run: |
           if [ -n "$PR_NUMBER" ]; then
-            echo "branch=audit/pr-$PR_NUMBER-$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            echo "args=-Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=main" >> "$GITHUB_OUTPUT"
           else
-            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "args=-Dsonar.branch.name=main" >> "$GITHUB_OUTPUT"
           fi
-      - name: Scan all candidate code and wait for gate
+      - name: Scan and wait for built-in gate
         uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.branch.name=${{ steps.candidate.outputs.branch }}
+            ${{ steps.candidate.outputs.args }}
             -Dsonar.scm.revision=${{ github.sha }}
             -Dsonar.qualitygate.wait=true
-      - name: Require zero total outstanding issues on this revision
+      - name: Enforce zero reported issues and supported quality measures
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          AUDIT_BRANCH: ${{ steps.candidate.outputs.branch }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           EXPECTED_SHA: ${{ github.sha }}
         run: |
-          python3 - <<'PY'
+          python3 - <<'PYCODE'
           import json,os,urllib.request,urllib.parse
           host='https://sonarcloud.io'
           def get(path,params):
               request=urllib.request.Request(host+path+'?'+urllib.parse.urlencode(params),headers={'Authorization':'Bearer '+os.environ['SONAR_TOKEN']})
               with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
           project='marcelomiyake_session-autopsy'
-          branch=os.environ['AUDIT_BRANCH']
-          analyses=get('/api/project_analyses/search',{'project':project,'branch':branch,'ps':1})['analyses']
-          if not analyses or analyses[0].get('revision')!=os.environ['EXPECTED_SHA']:raise SystemExit('Missing or stale full-code analysis')
-          gate=get('/api/qualitygates/project_status',{'analysisId':analyses[0]['key']})['projectStatus']
-          if gate['status']!='OK':raise SystemExit('Quality gate failed')
-          conditions={c['metricKey']:c for c in gate.get('conditions',[])}
-          overall=conditions.get('violations')
-          if not overall or overall.get('status')!='OK' or float(overall['actualValue'])!=0:raise SystemExit('Overall zero-issues condition missing or failed')
-          issues=get('/api/issues/search',{'componentKeys':project,'branch':branch,'issueStatuses':'OPEN,CONFIRMED,ACCEPTED','ps':1})
-          if issues['total']!=0:raise SystemExit('Outstanding or accepted issues remain')
-          print('Verified zero total issues on',os.environ['EXPECTED_SHA'])
-          PY
+          contexts=[{'branch':'main'}]
+          if os.environ['PR_NUMBER']:contexts.append({'pullRequest':os.environ['PR_NUMBER']})
+          for context in contexts:
+              gate=get('/api/qualitygates/project_status',{'projectKey':project,**context})['projectStatus']
+              if gate['status']!='OK':raise SystemExit('Quality gate missing or failed for '+repr(context))
+              issues=get('/api/issues/search',{'componentKeys':project,**context,'issueStatuses':'OPEN,CONFIRMED,ACCEPTED','ps':1})
+              if issues['total']!=0:raise SystemExit('Outstanding or accepted issues remain: '+repr(context))
+          metrics=get('/api/measures/component',{'component':project,'branch':'main','metricKeys':'coverage,duplicated_lines_density,security_hotspots_reviewed'})['component']['measures']
+          bounds={'coverage':('min',80),'duplicated_lines_density':('max',3),'security_hotspots_reviewed':('min',100)}
+          for measure in metrics:
+              direction,limit=bounds[measure['metric']]
+              value=float(measure['value'])
+              if (direction=='min' and value<limit) or (direction=='max' and value>limit):raise SystemExit('Overall metric failed: '+measure['metric'])
+          print('Verified zero reported issues on main and PR; free-plan PR analysis covers new code only.')
+          PYCODE
