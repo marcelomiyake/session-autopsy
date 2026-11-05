@@ -69,9 +69,11 @@ class ClaudeSource:
             return
         try:
             tokens = claude_tokens(usage)
-            identity = f"anthropic:{row.get('requestId', '')}:{message.get('id', row.get('uuid', line))}"
+            response_id = message.get("id") or row.get("requestId") or row.get("uuid") or f"{session.agent_id}:{line}"
+            identity = f"anthropic:{response_id}"
             creation = usage.get("cache_creation") or {}
-            writes = {k: creation[k] for k in ("ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens") if k in creation}
+            writes = {k: creation[k] for k in ("ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens")
+                      if type(creation.get(k)) is int and creation[k] >= 0}
             latest[identity] = UsageObservation(identity, session.agent_id, "anthropic", message.get("model"),
                 row.get("effort", row.get("perTurnEffort")), row.get("timestamp", ""), tokens,
                 EvidenceRef(session.path, line), writes, usage.get("speed", "standard"),

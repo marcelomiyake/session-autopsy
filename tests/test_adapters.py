@@ -122,3 +122,12 @@ class AdapterTests(unittest.TestCase):
         self.assertIsNone(session.observations[-1].tokens.output)
         self.assertIsNone(session.observations[-1].tokens.reasoning)
         self.assertFalse(session.warnings)
+
+    def test_late_request_metadata_does_not_duplicate_a_response(self):
+        early, final = claude_usage(), claude_usage(output=9)
+        final["requestId"] = "request-arrived-after-first-stream-block"
+        final["message"]["usage"]["cache_creation"]["ephemeral_1h_input_tokens"] = None
+        session = ClaudeSource().read(write_rows(self.root / "stream.jsonl", [early, final]))
+        self.assertEqual(len(session.observations), 1)
+        self.assertEqual(session.observations[0].tokens.output, 9)
+        self.assertNotIn("ephemeral_1h_input_tokens", session.observations[0].writes)
