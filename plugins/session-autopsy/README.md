@@ -83,5 +83,7 @@ authentication, or cookies, and `--offline` disables them. There is no telemetry
 Full details are in the
 [privacy policy](https://github.com/marcelomiyake/session-autopsy/blob/main/PRIVACY.md).
 
-Source, issues, and security reporting live at
-[marcelomiyake/session-autopsy](https://github.com/marcelomiyake/session-autopsy).
+The [guide](https://github.com/marcelomiyake/session-autopsy/blob/main/docs/guide.md) has example prompts, an explanation of
+each report section, and troubleshooting. Use is subject to the
+[terms of service](https://github.com/marcelomiyake/session-autopsy/blob/main/TERMS.md). Report problems in
+[GitHub issues](https://github.com/marcelomiyake/session-autopsy/issues).

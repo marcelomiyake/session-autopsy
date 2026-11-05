@@ -27,7 +27,7 @@
     ],
     "websiteURL": "https://github.com/marcelomiyake/session-autopsy",
     "privacyPolicyURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/PRIVACY.md",
-    "termsOfServiceURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/LICENSE",
+    "termsOfServiceURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/TERMS.md",
     "defaultPrompt": [
       "Use $session-autopsy to select a session and report tokens, costs, and compactions."
     ],

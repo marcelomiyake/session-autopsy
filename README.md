@@ -87,7 +87,7 @@ uv run coverage xml
 
 Runtime dependencies use the Python standard library. Development dependencies
 are isolated in the uv environment. See [AGENTS.md](AGENTS.md),
-[PRIVACY.md](PRIVACY.md), and [SECURITY.md](SECURITY.md).
+[PRIVACY.md](PRIVACY.md), [TERMS.md](TERMS.md), and [SECURITY.md](SECURITY.md).
 
 ## Quality and contributions
 
@@ -98,8 +98,9 @@ Free-plan PR analysis covers new code only: it cannot prove the complete candida
 
 ## Use
 
-Modes, selectors, filters, accounting rules, analysis limits, and the data the
-plugin sends are documented in the [plugin README](plugins/session-autopsy/README.md),
+The [guide](docs/guide.md) covers how it works, example prompts, reading a report,
+and troubleshooting. Modes, selectors, filters, accounting rules, analysis limits,
+and the data the plugin sends are in the [plugin README](plugins/session-autopsy/README.md),
 which is also the directory listing's description.
 
 ## Privacy and branding

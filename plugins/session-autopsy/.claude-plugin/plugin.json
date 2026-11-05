@@ -8,6 +8,10 @@
   },
   "homepage": "https://github.com/marcelomiyake/session-autopsy",
   "repository": "https://github.com/marcelomiyake/session-autopsy",
+  "documentationUrl": "https://github.com/marcelomiyake/session-autopsy/blob/main/docs/guide.md",
+  "supportUrl": "https://github.com/marcelomiyake/session-autopsy/issues",
+  "privacyPolicyUrl": "https://github.com/marcelomiyake/session-autopsy/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/marcelomiyake/session-autopsy/blob/main/TERMS.md",
   "license": "MIT",
   "keywords": [
     "sessions",
