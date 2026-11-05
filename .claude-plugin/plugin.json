@@ -1,0 +1,19 @@
+{
+  "name": "session-autopsy",
+  "displayName": "Session Autopsy",
+  "version": "0.1.0",
+  "description": "Analyze local Claude Code and Codex sessions for tokens, API cost estimates, agent models, compactions, and optimization advice.",
+  "author": {
+    "name": "Marcelo Masahiko Miyake"
+  },
+  "homepage": "https://github.com/marcelomiyake/session-autopsy",
+  "repository": "https://github.com/marcelomiyake/session-autopsy",
+  "license": "MIT",
+  "keywords": [
+    "sessions",
+    "tokens",
+    "cost",
+    "context",
+    "codex"
+  ]
+}

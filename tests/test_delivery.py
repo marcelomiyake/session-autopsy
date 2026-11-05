@@ -142,6 +142,8 @@ class DeliveryTests(unittest.TestCase):
         with patch("session_autopsy.cli.Path.home", return_value=self.root):
             self.assertEqual(len(cli.install("both")["installed"]), 2)
             self.assertEqual(len(cli.install("both")["installed"]), 2)
+        self.assertTrue((self.root / ".claude/skills/session-autopsy/SKILL.md").exists())
+        self.assertTrue((self.root / ".agents/skills/session-autopsy/scripts/autopsy.py").exists())
         conflict = self.root / "other/.claude/skills/session-autopsy";conflict.mkdir(parents=True)
         with patch("session_autopsy.cli.Path.home", return_value=self.root / "other"):
             with self.assertRaises(ValueError):cli.install("claude")

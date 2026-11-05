@@ -38,7 +38,7 @@ def parser():
 def install(host):
     if host not in ("claude", "codex", "both"):
         raise ValueError("Installation requires --host claude, codex, or both")
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[1] / "skills/session-autopsy"
     if not (root / "SKILL.md").exists():
         raise ValueError("Skill installation requires the source checkout; install from its launcher")
     destinations = []

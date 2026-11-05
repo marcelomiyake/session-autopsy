@@ -1,0 +1,14 @@
+{
+  "name": "session-autopsy",
+  "owner": {
+    "name": "Marcelo Masahiko Miyake"
+  },
+  "description": "Local session accounting for Claude Code and Codex.",
+  "plugins": [
+    {
+      "name": "session-autopsy",
+      "source": "./",
+      "description": "Analyze local Claude Code and Codex sessions for tokens, API cost estimates, agent models, compactions, and optimization advice."
+    }
+  ]
+}
