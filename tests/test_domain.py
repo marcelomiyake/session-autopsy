@@ -11,7 +11,7 @@ class DomainTests(unittest.TestCase):
         self.assertIsNone(Tokens().uncached)
 
     def test_invalid_counts(self):
-        for args in ((-1,), (1.5,), (True,), (2, 3, 0), (1, 0, 0, 1, 2)):
+        for args in ((-1,), (1.5,), (True,), (2, 3, 0), (2, 3), (2, None, 3), (1, 0, 0, 1, 2)):
             with self.subTest(args=args), self.assertRaises(ValueError):
                 Tokens(*args)
 

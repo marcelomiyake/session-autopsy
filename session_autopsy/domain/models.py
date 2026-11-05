@@ -16,7 +16,7 @@ class Tokens:
         values = (self.input, self.cache_read, self.cache_write, self.output, self.reasoning)
         if any(v is not None and (type(v) is not int or v < 0) for v in values):
             raise ValueError("Token counts must be nonnegative integers or unknown")
-        if self.uncached is not None and self.uncached < 0:
+        if self.input is not None and sum(v or 0 for v in (self.cache_read, self.cache_write)) > self.input:
             raise ValueError("Cache categories exceed total input")
         if self.reasoning is not None and self.output is not None and self.reasoning > self.output:
             raise ValueError("Reasoning exceeds output")
