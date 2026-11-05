@@ -157,3 +157,6 @@ The Social Preview asset is 1280×640 PNG, below 1 MB, generated using the built
 image tool from this generic prompt: “A clean technical banner titled Session
 Autopsy, with abstract agent branches, a token usage trace, and context compression;
 no real session content, product logos, or personal information.”
+
+The plugin icon is a hand-authored SVG, `assets/icon.svg`, in the same palette.
+`assets/icon.png` is its 1024×1024 rendering from headless Chrome.

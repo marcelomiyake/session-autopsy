@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import struct
 import tomllib
 import unittest
 
@@ -23,6 +24,17 @@ class PackagingTests(unittest.TestCase):
                              (project["name"], project["version"], project["license"]))
         self.assertEqual((ROOT / codex["skills"]).resolve(), SKILL.parent)
         self.assertIn("name: session-autopsy\n", (SKILL / "SKILL.md").read_text())
+
+    def test_icons_exist_and_meet_listing_limits(self):
+        claude, codex = manifest(".claude-plugin/plugin.json"), manifest(".codex-plugin/plugin.json")
+        icon = ROOT / claude["icon"]
+        header = icon.read_bytes()[:24]
+        self.assertEqual(header[:8], b"\x89PNG\r\n\x1a\n")
+        width, height = struct.unpack(">II", header[16:24])
+        self.assertTrue(width == height and 512 <= width <= 2048)
+        self.assertLess(icon.stat().st_size, 2_000_000)
+        for key in ("composerIcon", "logo"):
+            self.assertTrue((ROOT / codex["interface"][key]).is_file(), key)
 
     def test_marketplaces_list_this_plugin_from_repository_root(self):
         for path in (".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"):

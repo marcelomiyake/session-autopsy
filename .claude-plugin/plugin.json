@@ -15,5 +15,6 @@
     "cost",
     "context",
     "codex"
-  ]
+  ],
+  "icon": "./assets/icon.png"
 }
