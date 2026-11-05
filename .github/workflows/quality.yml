@@ -77,9 +77,9 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
         run: |
           if [ -n "$PR_NUMBER" ]; then
-            echo "args=-Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=main" >> "$GITHUB_OUTPUT"
+            echo "args=-Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=master" >> "$GITHUB_OUTPUT"
           else
-            echo "args=-Dsonar.branch.name=main" >> "$GITHUB_OUTPUT"
+            echo "args=-Dsonar.branch.name=master" >> "$GITHUB_OUTPUT"
           fi
       - name: Scan and wait for built-in gate
         uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
@@ -103,14 +103,14 @@ jobs:
               request=urllib.request.Request(host+path+'?'+urllib.parse.urlencode(params),headers={'Authorization':'Bearer '+os.environ['SONAR_TOKEN']})
               with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
           project='marcelomiyake_session-autopsy'
-          contexts=[{'branch':'main'}]
+          contexts=[{'branch':'master'}]
           if os.environ['PR_NUMBER']:contexts.append({'pullRequest':os.environ['PR_NUMBER']})
           for context in contexts:
               gate=get('/api/qualitygates/project_status',{'projectKey':project,**context})['projectStatus']
               if gate['status']!='OK':raise SystemExit('Quality gate missing or failed for '+repr(context))
               issues=get('/api/issues/search',{'componentKeys':project,**context,'issueStatuses':'OPEN,CONFIRMED,ACCEPTED','ps':1})
               if issues['total']!=0:raise SystemExit('Outstanding or accepted issues remain: '+repr(context))
-          metrics=get('/api/measures/component',{'component':project,'branch':'main','metricKeys':'coverage,duplicated_lines_density,security_hotspots_reviewed'})['component']['measures']
+          metrics=get('/api/measures/component',{'component':project,'branch':'master','metricKeys':'coverage,duplicated_lines_density,security_hotspots_reviewed'})['component']['measures']
           bounds={'coverage':('min',80),'duplicated_lines_density':('max',3),'security_hotspots_reviewed':('min',100)}
           for measure in metrics:
               direction,limit=bounds[measure['metric']]
