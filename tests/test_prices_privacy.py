@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
-from session_autopsy.adapters.local import PrivateEvidenceStore, cache_directory, private_write
+from session_autopsy.adapters.local import PrivateEvidenceStore, cache_directory, private_write, export_report
 from session_autopsy.adapters.network import FixedRedirects, fetch_document
 from session_autopsy.adapters.prices import OfficialPrices, dollars, parse_claude, parse_openai, validate_snapshot
 from tests.test_accounting import catalog
@@ -55,6 +55,21 @@ class PricePrivacyTests(unittest.TestCase):
         self.assertEqual(root.stat().st_mode & 0o777, 0o700)
         private_write(path, "replacement")
         self.assertEqual(path.read_text(), "replacement")
+
+    def test_exports_reject_traversal_and_source_logs(self):
+        for name in ("../outside.json", "/tmp/report.json", "session.jsonl", ".hidden.json"):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                export_report(name, "private")
+        workspace = Path(self.temp.name) / "workspace";workspace.mkdir()
+        (workspace / "reports").symlink_to(cache_directory(), target_is_directory=True)
+        with patch("session_autopsy.adapters.local.Path.cwd", return_value=workspace):
+            with self.assertRaises(ValueError):export_report("report.json", "private")
+
+    def test_corrupt_cache_uses_verified_baseline(self):
+        (cache_directory() / "prices.json").write_text("corrupted")
+        prices = OfficialPrices()
+        self.assertTrue(prices.load(offline=True)["rates"])
+        self.assertIn("Invalid cached prices", prices.warnings[0])
 
     def test_egress_denies_arbitrary_urls_and_redirects(self):
         with self.assertRaises(ValueError):fetch_document("https://example.com/private")

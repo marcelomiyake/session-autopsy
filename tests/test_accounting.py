@@ -46,3 +46,11 @@ class AccountingTests(unittest.TestCase):
         self.assertEqual(report["totals"]["unpriced_requests"], 1)
         self.assertEqual(len(report["compactions"]), 1)
         self.assertEqual(report["reported_summaries"], [{"cost": 999}])
+
+    def test_summary_only_models_are_visible_without_adding_counters(self):
+        session = Session("fake", "root", "log", agent_id="root", observations=[observation()],
+            reported=[{"model_provider": "openai", "models": {"test": {"input": 120}, "background": {"input": 10}}}])
+        report = build_report([session], catalog())
+        self.assertEqual(report["totals"]["tokens"]["input"], 100)
+        self.assertEqual(report["reconciliation"][0]["difference"]["input"], 20)
+        self.assertTrue(report["reconciliation"][1]["summary_only_model"])

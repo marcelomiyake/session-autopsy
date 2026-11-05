@@ -110,6 +110,9 @@ class AdapterTests(unittest.TestCase):
         warnings = []
         self.assertEqual(list(snapshot_rows(path, warnings)), [(1, {"a": 1})])
         self.assertEqual(len(warnings), 1)
+        size = path.stat().st_size
+        with path.open("a") as stream:stream.write('\n{"after_snapshot":true}\n')
+        self.assertEqual(list(snapshot_rows(path, [], size)), [(1, {"a": 1})])
 
     def test_missing_cumulative_fields_stay_unknown_without_false_reset(self):
         first = {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": 100, "output_tokens": 10}}}}

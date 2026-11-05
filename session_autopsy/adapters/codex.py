@@ -31,7 +31,7 @@ class CodexSource:
                           capabilities={"usage": True, "effort": True, "compactions": True})
         state = {"model": None, "effort": None, "provider": "unknown", "tier": "standard", "previous": None}
         ledger, fallback = {}, []
-        for line, row in snapshot_rows(path, session.warnings):
+        for line, row in snapshot_rows(path, session.warnings, session.snapshot_bytes):
             remember_time(session, row.get("timestamp", ""))
             payload = row.get("payload") or {}
             kind = row.get("type")

@@ -31,7 +31,7 @@ class ClaudeSource:
                           agent_id=path.stem if child else sid, snapshot_bytes=path.stat().st_size,
                           capabilities={"usage": True, "effort": True, "compactions": True})
         latest = {}
-        for line, row in snapshot_rows(path, session.warnings):
+        for line, row in snapshot_rows(path, session.warnings, session.snapshot_bytes):
             remember_time(session, row.get("timestamp", ""))
             session.cwd = session.cwd or row.get("cwd", "")
             self._metadata(session, row, line)

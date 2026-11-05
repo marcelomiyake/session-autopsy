@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 
-def snapshot_rows(path: Path, warnings: list[str]):
-    size = path.stat().st_size
+def snapshot_rows(path: Path, warnings: list[str], size=None):
+    size = path.stat().st_size if size is None else size
     with path.open("rb") as stream:
         remaining = size
         number = 0
