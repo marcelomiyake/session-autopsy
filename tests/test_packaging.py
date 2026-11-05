@@ -48,6 +48,16 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual([(p["name"], p["source"]) for p in catalog["plugins"]],
                              [("session-autopsy", "./plugins/session-autopsy")])
 
+    def test_listing_links_point_to_repository_files(self):
+        claude, codex = manifest(".claude-plugin/plugin.json"), manifest(".codex-plugin/plugin.json")
+        links = [claude[key] for key in ("documentationUrl", "privacyPolicyUrl", "termsOfServiceUrl")]
+        links += [codex["interface"][key] for key in ("privacyPolicyURL", "termsOfServiceURL")]
+        prefix = claude["repository"] + "/blob/main/"
+        for link in links:
+            self.assertTrue(link.startswith(prefix), link)
+            self.assertTrue((ROOT / link.removeprefix(prefix)).is_file(), link)
+        self.assertEqual(claude["supportUrl"], claude["repository"] + "/issues")
+
     def test_plugin_folder_ships_only_runtime_files(self):
         self.assertEqual(DEVELOPMENT_ONLY & {entry.name for entry in PLUGIN.iterdir()}, set())
         self.assertEqual((PLUGIN / "LICENSE").read_text(), (ROOT / "LICENSE").read_text())
