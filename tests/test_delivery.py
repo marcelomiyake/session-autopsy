@@ -126,6 +126,7 @@ class DeliveryTests(unittest.TestCase):
         for command in (["list", "--limit", "0"], ["improve", str(path)], ["tokens", "absent"]):
             with self.assertRaises(ValueError):self.invoke(command)
         self.assertTrue(self.invoke(["prices"])["rates"])
+        with self.assertRaises(ValueError):self.invoke(["tokens", "latest", "--cwd", "not-a-matching-directory"])
 
     def test_main_output_errors_and_install(self):
         with patch("session_autopsy.cli.run", return_value={"ok": True}), patch("sys.stdout", new_callable=io.StringIO) as stream:

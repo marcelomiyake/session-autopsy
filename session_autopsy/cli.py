@@ -75,7 +75,7 @@ def run(args):
     if args.command == "pick":
         return {"selected": choose(rows)}
     selector = resolve_selector(args.selector, rows)
-    candidates = [s for s in sessions if not args.harness or s.harness == args.harness]
+    candidates = filtered if selector == "latest" else [s for s in sessions if not args.harness or s.harness == args.harness]
     selected = service.select(candidates, selector)
     report, family = service.report(sessions, selected, prices.load(args.offline))
     report["warnings"].extend(warnings + prices.warnings)

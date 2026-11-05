@@ -110,3 +110,12 @@ class AdapterTests(unittest.TestCase):
         warnings = []
         self.assertEqual(list(snapshot_rows(path, warnings)), [(1, {"a": 1})])
         self.assertEqual(len(warnings), 1)
+
+    def test_missing_cumulative_fields_stay_unknown_without_false_reset(self):
+        first = {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": 100, "output_tokens": 10}}}}
+        second = {"type": "event_msg", "payload": {"type": "token_count", "info": {"total_token_usage": {"input_tokens": 150}}}}
+        session = CodexSource().read(write_rows(self.root / "partial.jsonl", codex_rows() + [first, second]))
+        self.assertEqual(sum(o.tokens.input for o in session.observations), 150)
+        self.assertIsNone(session.observations[-1].tokens.output)
+        self.assertIsNone(session.observations[-1].tokens.reasoning)
+        self.assertFalse(session.warnings)

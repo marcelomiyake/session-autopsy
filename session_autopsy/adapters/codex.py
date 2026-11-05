@@ -110,11 +110,12 @@ class CodexSource:
         state["previous"] = total
         if total == previous:
             return
-        reset = previous is not None and any(total.get(k, 0) < previous.get(k, 0) for k in FIELDS)
+        reset = previous is not None and any(
+            total.get(k) is not None and previous.get(k) is not None and total[k] < previous[k] for k in FIELDS)
         if reset:
             session.warnings.append(f"{session.path}:{line}: cumulative counter reset")
         baseline = {} if previous is None or reset else previous
-        delta = {k: total.get(k, 0) - baseline.get(k, 0) for k in FIELDS}
+        delta = {k: counter_delta(total, baseline, k, previous is None or reset) for k in FIELDS}
         observation = self._observation(session, state, delta, line, timestamp, f"legacy:{session.id}:{line}")
         if observation:
             fallback.append(observation)
@@ -128,3 +129,9 @@ class CodexSource:
         except (TypeError, ValueError) as exc:
             session.warnings.append(f"{session.path}:{line}: invalid usage: {exc}")
             return None
+
+
+def counter_delta(total, baseline, key, initial):
+    current = total.get(key)
+    prior = baseline.get(key, 0) if initial else baseline.get(key)
+    return current - prior if current is not None and prior is not None else None
