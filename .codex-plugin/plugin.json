@@ -1,0 +1,35 @@
+{
+  "name": "session-autopsy",
+  "version": "0.1.0",
+  "description": "Analyze local Claude Code and Codex sessions for tokens, API cost estimates, agent models, compactions, and optimization advice.",
+  "author": {
+    "name": "Marcelo Masahiko Miyake"
+  },
+  "homepage": "https://github.com/marcelomiyake/session-autopsy",
+  "repository": "https://github.com/marcelomiyake/session-autopsy",
+  "license": "MIT",
+  "keywords": [
+    "sessions",
+    "tokens",
+    "cost",
+    "context",
+    "claude-code"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Session Autopsy",
+    "shortDescription": "Account for session tokens, costs, agents, and context",
+    "longDescription": "Select a local Claude Code or Codex session and report deterministic token usage, API cost estimates, agent models and efforts, and context compactions. Optional postmortem and improvement analysis runs on a native fresh-context worker with bounded evidence.",
+    "developerName": "Marcelo Masahiko Miyake",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://github.com/marcelomiyake/session-autopsy",
+    "privacyPolicyURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/marcelomiyake/session-autopsy/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Use $session-autopsy to select a session and report tokens, costs, and compactions."
+    ]
+  }
+}

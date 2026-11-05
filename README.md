@@ -7,6 +7,46 @@ agent models, context compactions, and optimization advice.
 
 [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=marcelomiyake_session-autopsy&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=marcelomiyake_session-autopsy)
 
+## Install
+
+Install the plugin in one step with Claude Code 2.1.275 or later:
+
+```sh
+claude plugin install session-autopsy --marketplace marcelomiyake/session-autopsy
+```
+
+Inside a Claude Code session, run the same command as
+`/plugin install session-autopsy --marketplace marcelomiyake/session-autopsy`.
+Older Claude Code versions add the marketplace first:
+
+```sh
+claude plugin marketplace add marcelomiyake/session-autopsy
+claude plugin install session-autopsy@session-autopsy
+```
+
+Codex adds the marketplace and then installs from it by name:
+
+```sh
+codex plugin marketplace add marcelomiyake/session-autopsy
+codex plugin add session-autopsy@session-autopsy
+```
+
+Start a new session afterward. Remove the plugin with
+`claude plugin uninstall session-autopsy@session-autopsy` or
+`codex plugin remove session-autopsy@session-autopsy`. For the standalone terminal
+command, use `uv tool install git+https://github.com/marcelomiyake/session-autopsy`.
+
+To work from a checkout instead, link its skill into both hosts:
+
+```sh
+python3 skills/session-autopsy/scripts/autopsy.py install --host both
+```
+
+This links `skills/session-autopsy` into `~/.claude/skills/session-autopsy` and
+`~/.agents/skills/session-autopsy`, refusing conflicting destinations. Keep the
+checkout available, and use either the plugin or the linked checkout, not both.
+In the checkout, `uv sync --locked` followed by `uv run session-autopsy` also works.
+
 ## Architecture
 
 One Python package separates session evidence, usage accounting, and cost advisory.
@@ -50,20 +90,14 @@ Every merge requires tests, architecture checks, commit validation, and a SonarC
 at least 80%; duplication is at most 3%; applicable hotspots are fully reviewed.
 Free-plan PR analysis covers new code only: it cannot prove the complete candidate tree is clean before merge. All of main is scanned after each merge.
 
-## Install and use
+## Use
 
-Clone this repository, then run its self-contained launcher (no packages needed):
+The launcher is self-contained and needs no packages:
 
 ```sh
-python3 scripts/autopsy.py install --host both
-python3 scripts/autopsy.py list --format json
-python3 scripts/autopsy.py tokens latest --harness codex --offline
+python3 skills/session-autopsy/scripts/autopsy.py list --format json
+python3 skills/session-autopsy/scripts/autopsy.py tokens latest --harness codex --offline
 ```
-
-Installation links this checkout into `~/.claude/skills/session-autopsy` and
-`~/.agents/skills/session-autopsy`, refusing conflicting destinations. Keep the
-checkout available. For the standalone command, use `uv tool install .` or
-`uv sync --locked` followed by `uv run session-autopsy` in the checkout.
 
 | Mode | Result |
 | --- | --- |
@@ -75,7 +109,9 @@ checkout available. For the standalone command, use `uv tool install .` or
 | `prices refresh` | Fetch and validate current official pricing |
 
 In Claude Code use `/session-autopsy tokens <id>`; in Codex use
-`$session-autopsy improve <id>`. No selector means a chat list in the skill or an
+`$session-autopsy improve <id>`. Plugin installs namespace the skill as
+`session-autopsy:session-autopsy`, for example
+`/session-autopsy:session-autopsy tokens <id>`. No selector means a chat list in the skill or an
 interactive picker in the terminal. Select an ID, unique prefix, full path,
 explicit `latest`, or `current` if the host exposes its session ID. Child agents
 appear in their parent report and can also be selected by agent ID or path.
@@ -109,7 +145,7 @@ GPT-6.1 Sol at high effort; `--effort high` raises effort on the selected model.
 No automatic escalation or cross-provider fallback is provided. The coordinator
 still consumes tokens under the host's current model. If explicit native model
 selection is unavailable, the skill returns the packet path and stops narrative
-analysis. See [the analysis reference](references/analysis.md) for delegation
+analysis. See [the analysis reference](skills/session-autopsy/references/analysis.md) for delegation
 examples and evidence requirements.
 
 Session evidence stays local except for the bounded packet deliberately passed
