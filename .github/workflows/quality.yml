@@ -1,0 +1,116 @@
+name: Quality
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Tests and architecture contracts
+        run: |
+          uv run coverage run -m unittest discover
+          uv run coverage report
+  conventional-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate new commit headers and PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,re,subprocess
+          pattern=re.compile(r'^[a-z]+(?:\([^\r\n()]+\))?!?: \S.*$')
+          titles=[]
+          if os.environ['PR_TITLE']:
+              titles.append(os.environ['PR_TITLE'])
+              titles.extend(subprocess.check_output(['git','log','--format=%s',os.environ['BASE_SHA']+'..'+os.environ['HEAD_SHA']],text=True).splitlines())
+          else:
+              titles.append(subprocess.check_output(['git','log','-1','--format=%s'],text=True).strip())
+          invalid=[title for title in titles if not pattern.fullmatch(title)]
+          if invalid:raise SystemExit('Invalid Conventional Commit headers: '+repr(invalid))
+          PY
+  sonar-zero-total:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+      - run: |
+          uv sync --locked
+          uv run coverage run -m unittest discover
+          uv run coverage xml
+      - name: Identify full candidate tree
+        id: candidate
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "branch=audit/pr-$PR_NUMBER-$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Scan all candidate code and wait for gate
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.branch.name=${{ steps.candidate.outputs.branch }}
+            -Dsonar.scm.revision=${{ github.sha }}
+            -Dsonar.qualitygate.wait=true
+      - name: Require zero total outstanding issues on this revision
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          AUDIT_BRANCH: ${{ steps.candidate.outputs.branch }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json,os,urllib.request,urllib.parse
+          host='https://sonarcloud.io'
+          def get(path,params):
+              request=urllib.request.Request(host+path+'?'+urllib.parse.urlencode(params),headers={'Authorization':'Bearer '+os.environ['SONAR_TOKEN']})
+              with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
+          project='marcelomiyake_session-autopsy'
+          branch=os.environ['AUDIT_BRANCH']
+          analyses=get('/api/project_analyses/search',{'project':project,'branch':branch,'ps':1})['analyses']
+          if not analyses or analyses[0].get('revision')!=os.environ['EXPECTED_SHA']:raise SystemExit('Missing or stale full-code analysis')
+          gate=get('/api/qualitygates/project_status',{'analysisId':analyses[0]['key']})['projectStatus']
+          if gate['status']!='OK':raise SystemExit('Quality gate failed')
+          conditions={c['metricKey']:c for c in gate.get('conditions',[])}
+          overall=conditions.get('violations')
+          if not overall or overall.get('status')!='OK' or float(overall['actualValue'])!=0:raise SystemExit('Overall zero-issues condition missing or failed')
+          issues=get('/api/issues/search',{'componentKeys':project,'branch':branch,'issueStatuses':'OPEN,CONFIRMED,ACCEPTED','ps':1})
+          if issues['total']!=0:raise SystemExit('Outstanding or accepted issues remain')
+          print('Verified zero total issues on',os.environ['EXPECTED_SHA'])
+          PY
