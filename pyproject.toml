@@ -21,6 +21,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
+where = ["plugins/session-autopsy"]
 include = ["session_autopsy*"]
 
 [tool.setuptools.package-data]

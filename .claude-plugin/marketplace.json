@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "session-autopsy",
-      "source": "./",
+      "source": "./plugins/session-autopsy",
       "description": "Analyze local Claude Code and Codex sessions for tokens, API cost estimates, agent models, compactions, and optimization advice."
     }
   ]

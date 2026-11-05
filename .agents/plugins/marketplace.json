@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "session-autopsy",
-      "source": "./",
+      "source": "./plugins/session-autopsy",
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
