@@ -5,6 +5,7 @@ DOCUMENTS = {
     "anthropic-prices": "https://platform.claude.com/docs/en/about-claude/pricing.md",
     "openai-prices": "https://developers.openai.com/api/docs/pricing.md",
     "claude-prompting": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices.md",
+    "claude-fable-prompting": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2.md",
     "openai-prompting": "https://developers.openai.com/api/docs/guides/latest-model.md",
     "claude-agents": "https://code.claude.com/docs/en/sub-agents.md",
     "codex-agents": "https://learn.chatgpt.com/docs/agent-configuration/subagents.md",

@@ -19,6 +19,17 @@ CLAUDE = '''## Model pricing
 ## Other
 | Claude Opus 5.5 | $4 | $5 | $8 | $0.2 | $20 |
 '''
+CLAUDE_FAST = '''## Model pricing
+| Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits | Output tokens |
+| Claude Fable 5.2 | $8 / MTok | $10 / MTok | $16 / MTok | $0.20 / MTok | $40 / MTok |
+| Claude Opus 5 | $5 / MTok | $6.25 / MTok | $10 / MTok | $0.50 / MTok | $25 / MTok |
+### Fast mode pricing
+| Model | Input | Output |
+| Claude Fable 5.2 | $16 USD / MTok | $80 USD / MTok |
+| Claude Opus 5 / Claude Opus 4.8 | $10 USD / MTok | $50 USD / MTok |
+## Batch processing
+| Claude Fable 5.2 | $4 USD / MTok | $20 USD / MTok |
+'''
 OPENAI = '''### Standard pricing data
 | Model | Short input | Short output | Short read | Short 30m | Short 12h | Long input | Long output | Long read | Long 30m | Long 12h |
 | gpt-test | $1 | $10 | $0.1 | $1.25 | $2.5 | $2 | $15 | $0.2 | $2.5 | $5 |
@@ -39,6 +50,23 @@ class PricePrivacyTests(unittest.TestCase):
         self.assertEqual(parse_claude(CLAUDE)[1]["context"], "long")
         self.assertEqual(len(parse_openai(OPENAI)), 3)
         self.assertEqual(parse_openai(OPENAI)[-1]["tier"], "fast")
+
+    def test_claude_fast_mode_scales_cache_rates(self):
+        fast = {r["model"]: r for r in parse_claude(CLAUDE_FAST) if r["tier"] == "fast"}
+        self.assertEqual(set(fast), {"claude-fable-5-2", "claude-opus-5"})
+        self.assertEqual({k: fast["claude-fable-5-2"][k] for k in ("input", "write_5m", "write_1h", "read", "output")},
+            {"input": "16", "write_5m": "20", "write_1h": "32", "read": "0.4", "output": "80"})
+        self.assertEqual(fast["claude-opus-5"]["read"], "1")
+
+    def test_bundled_snapshot_prices_fable_5_2(self):
+        from session_autopsy.domain.accounting import request_cost
+        from session_autopsy.domain.models import EvidenceRef, Tokens, UsageObservation
+        data = OfficialPrices().load(offline=True)
+        for tier, expected in (("standard", "0.000928"), ("fast", "0.001856")):
+            usage = UsageObservation("id", "root", "anthropic", "claude-fable-5-2", "high", "now",
+                Tokens(100, 40, 20, 10, 3), EvidenceRef("log", 1), {"ephemeral_5m_input_tokens": 20}, tier)
+            with self.subTest(tier=tier):
+                self.assertEqual(request_cost(usage, data)["low"], expected)
 
     def test_snapshot_validation(self):
         for bad in ({}, {"schema_version": 1, "retrieved_at": "now", "rates": []}):

@@ -61,6 +61,33 @@ def parse_claude(body):
         if parsed:
             entries.append(parsed)
             last_model = parsed["model"]
+    return entries + parse_claude_fast(body, entries)
+
+
+def parse_claude_fast(body, standard):
+    """Fast mode lists only input/output; cache multipliers apply on top, as for standard."""
+    base = {e["model"]: e for e in standard if e["context"] == "short"}
+    entries = []
+    section = False
+    for line in body.splitlines():
+        if line.startswith("#"):
+            section = "fast mode pricing" in line.lower()
+        if not section or not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        values = [dollars(c) for c in cells[1:3]]
+        if len(cells) < 3 or any(v is None for v in values):
+            continue
+        for name in cells[0].split("/"):
+            model = claude_model(name)
+            if not model or model not in base:
+                continue
+            reference = base[model]
+            scale = Decimal(values[0]) / Decimal(reference["input"])
+            cache = {k: format((Decimal(reference[k]) * scale).normalize(), "f")
+                     for k in ("write_5m", "write_1h", "read")}
+            entries.append(rate(model, "anthropic", "fast", "short",
+                {"input": values[0], **cache, "output": values[1]}, None))
     return entries
 
 
