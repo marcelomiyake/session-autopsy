@@ -15,9 +15,26 @@ Suggest model/effort choices per task and a validation plan; a fixed-token price
 comparison is not a prediction of task quality, token savings, or execution time.
 Choose higher effort only when the expected quality gain justifies its cost.
 
+When the analyzed session ran on Claude Fable 5.2 or Claude Mythos 5.2, apply
+that model's guide, not advice tuned for earlier models:
+
+- Effort starts at `high`; suggest `medium` or `low` for routine or interactive
+  turns, and `xhigh` only where a measured gain justifies the extra tokens. At
+  `high` and above it thinks before almost every reply, even a short one.
+- Lines such as "answer directly without deliberating" no longer reduce
+  thinking; recommend lowering effort and removing those lines instead.
+- Token budgets written into the prompt, standing instructions to delegate,
+  and accumulated "never" rules or notes can raise cost or stall routine work;
+  recommend removing or scoping them. Name steps that need no approval.
+- Early stops at `low`/`medium` effort on long tasks call for a short
+  "finish the whole task" instruction rather than more effort.
+- Prompt or tool changes apply to new conversations only; editing earlier
+  turns invalidates preserved thinking and the prompt cache.
+
 Current official references (public documents only):
 
 - [Claude prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
+- [Prompting Claude Fable 5.2](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-2)
 - [OpenAI model guidance](https://developers.openai.com/api/docs/guides/latest-model)
 - [Claude agents](https://code.claude.com/docs/en/sub-agents)
 - [Codex agents](https://learn.chatgpt.com/docs/agent-configuration/subagents)

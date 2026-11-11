@@ -4,14 +4,40 @@
   "sources": [
     {
       "url": "https://platform.claude.com/docs/en/about-claude/pricing.md",
-      "sha256": "e1b915dea2070daeb283ec647ea7200c592870a9a73382d413d63d38c17993c1"
+      "sha256": "4fe2b894c1ec51f87e10428bb630886489c6a668fb674bc607a2c36a6834aabb",
+      "retrieved_at": "2026-11-11T09:45:18.381938+00:00"
     },
     {
       "url": "https://developers.openai.com/api/docs/pricing.md",
-      "sha256": "1f9a509962f12837f19a252394b480a8d20e40e2e67103a18662a6f31922b7c5"
+      "sha256": "1f9a509962f12837f19a252394b480a8d20e40e2e67103a18662a6f31922b7c5",
+      "retrieved_at": "2026-11-05T13:21:58.171256+00:00"
     }
   ],
   "rates": [
+    {
+      "model": "claude-fable-5-2",
+      "provider": "anthropic",
+      "tier": "standard",
+      "context": "short",
+      "threshold": null,
+      "input": "8",
+      "write_5m": "10",
+      "write_1h": "16",
+      "read": "0.20",
+      "output": "40"
+    },
+    {
+      "model": "claude-mythos-5-2",
+      "provider": "anthropic",
+      "tier": "standard",
+      "context": "short",
+      "threshold": null,
+      "input": "8",
+      "write_5m": "10",
+      "write_1h": "16",
+      "read": "0.20",
+      "output": "40"
+    },
     {
       "model": "claude-fable-5-1",
       "provider": "anthropic",
@@ -251,6 +277,66 @@
       "write_1h": "2",
       "read": "0.10",
       "output": "5"
+    },
+    {
+      "model": "claude-fable-5-2",
+      "provider": "anthropic",
+      "tier": "fast",
+      "context": "short",
+      "threshold": null,
+      "input": "16",
+      "write_5m": "20",
+      "write_1h": "32",
+      "read": "0.4",
+      "output": "80"
+    },
+    {
+      "model": "claude-mythos-5-2",
+      "provider": "anthropic",
+      "tier": "fast",
+      "context": "short",
+      "threshold": null,
+      "input": "16",
+      "write_5m": "20",
+      "write_1h": "32",
+      "read": "0.4",
+      "output": "80"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "provider": "anthropic",
+      "tier": "fast",
+      "context": "short",
+      "threshold": null,
+      "input": "8",
+      "write_5m": "10",
+      "write_1h": "16",
+      "read": "0.4",
+      "output": "40"
+    },
+    {
+      "model": "claude-opus-5",
+      "provider": "anthropic",
+      "tier": "fast",
+      "context": "short",
+      "threshold": null,
+      "input": "10",
+      "write_5m": "12.5",
+      "write_1h": "20",
+      "read": "1",
+      "output": "50"
+    },
+    {
+      "model": "claude-opus-4-8",
+      "provider": "anthropic",
+      "tier": "fast",
+      "context": "short",
+      "threshold": null,
+      "input": "10",
+      "write_5m": "12.5",
+      "write_1h": "20",
+      "read": "1",
+      "output": "50"
     },
     {
       "model": "claude-haiku-3-5",
